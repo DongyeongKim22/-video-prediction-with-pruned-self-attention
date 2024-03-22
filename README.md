@@ -1,1 +1,1 @@
-![example image](Stanford Poster Template-1 2.png "project poster")
+![example image](./Poster.png "project poster")
