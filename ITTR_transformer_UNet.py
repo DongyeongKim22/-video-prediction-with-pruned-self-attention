@@ -28,7 +28,7 @@ class Transformer_UNet(nn.Module):
         
         encoder_layers = TransformerEncoderLayer(d_model=self.n_components, nhead=self.nhead).to(device)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=self.num_encoder_layers).to(device)
-        # CNN 인코더 초기화
+        # CNN encoder
         self.cnn_encoder = nn.Sequential(
             nn.Conv2d(num_classes, hpb_dims[0], kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(hpb_dims[0]),
