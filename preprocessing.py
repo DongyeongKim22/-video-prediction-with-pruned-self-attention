@@ -59,10 +59,8 @@ class VideoFrameEmbedding(nn.Module):
     def __init__(self, n_frames=4, d_model=100):
         super(VideoFrameEmbedding, self).__init__()
         self.n_frames = n_frames
-        # 인스턴스화를 확인하고 조건부로 실행
         self.cnn_encoder = CNNEncoder()
         self.patch_embedding = PatchEmbedding(emb_size=d_model, input_channels=256)  
-        # `input_channels`의 값을 CNN 출력에 맞추어 설정
         self.temporal_pos_encoding = TemporalPositionalEncoding(d_model)
 
     def forward(self, video):
