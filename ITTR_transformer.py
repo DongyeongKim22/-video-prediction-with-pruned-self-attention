@@ -29,7 +29,7 @@ class ModifiedTransformerCNNForSegmentation(nn.Module):
         
         encoder_layers = TransformerEncoderLayer(d_model=self.n_components, nhead=self.nhead).to(device)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers=self.num_encoder_layers).to(device)
-        # CNN 인코더 초기화
+        # CNN encoder
         self.cnn_encoder = nn.Sequential(
             nn.Conv2d(num_classes, hpb_dims[0], kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(hpb_dims[0]),
@@ -60,9 +60,9 @@ class ModifiedTransformerCNNForSegmentation(nn.Module):
         # HPB 블록 초기화
 
         
-        # 업스케일링을 위한 디코더
+        # Upscaling
         self.seq_enc_reshaped = nn.Sequential(
-                                nn.Linear(self.n_components, 256*28*28), # FC 레이어를 사용하여 차원 변환
+                                nn.Linear(self.n_components, 256*28*28),
                                 nn.GELU())
 
         self.upscale = nn.Sequential(
@@ -110,7 +110,6 @@ class ModifiedTransformerCNNForSegmentation(nn.Module):
         batch_size, n_frames, C, H, W = video.shape  # video shape: (batch_size, num_frames, channels, H, W)
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-        # 각 프레임을 독립적으로 처리
         x = video.view(batch_size * n_frames, C, H, W)
 
         x = self.cnn_encoder(x)
@@ -121,11 +120,10 @@ class ModifiedTransformerCNNForSegmentation(nn.Module):
         
         x_temporal = x.view(batch_size * self.num_frames, -1)
         
-        # 랜덤 투영 가중치 생성
+        # random projection - memory limitation
         n_samples, n_features = x_temporal.shape
         projection_matrix = torch.randn(n_features, self.n_components) / self.n_components
 
-        # 랜덤 투영 적용
         x_temporal = torch.mm(x_temporal, projection_matrix.to(device))
         x_temporal = x_temporal.view(batch_size, self.num_frames, -1)
 
@@ -133,7 +131,7 @@ class ModifiedTransformerCNNForSegmentation(nn.Module):
         
         x_temporal = self.temporal_pos_encoder(x_temporal)
         
-        # 트랜스포머 인코더 적용
+        # transformer
         x_temporal = x_temporal.permute(1, 0, 2)  # Transformer expects (seq_len, batch, features)
         x_temporal = self.transformer_encoder(x_temporal).view(batch_size*self.num_frames, -1)
         
